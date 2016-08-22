@@ -1,8 +1,7 @@
 'use strict';
 
-var React = require('react-native');
-var {Component, PropTypes, StyleSheet, View, Text} = React;
-var UIManager = require('NativeModules').UIManager;
+import React, { Component } from 'react'
+import {UIManager, StyleSheet, View, Text} from 'react-native';
 
 var noop = () => {};
 var returnTrue = () => true;
@@ -88,29 +87,29 @@ SectionList.propTypes = {
   /**
    * A component to render for each section item
    */
-  component: PropTypes.func,
+  component: React.PropTypes.func,
 
   /**
    * Function to provide a title the section list items.
    */
-  getSectionListTitle: PropTypes.func,
+  getSectionListTitle: React.PropTypes.func,
 
   /**
    * Function to be called upon selecting a section list item
    */
-  onSectionSelect: PropTypes.func,
+  onSectionSelect: React.PropTypes.func,
 
   /**
    * The sections to render
    */
-  sections: PropTypes.array.isRequired,
+  sections: React.PropTypes.array.isRequired,
 
   /**
    * A style to apply to the section list container
    */
-  style: PropTypes.oneOfType([
-    PropTypes.number,
-    PropTypes.object,
+  style: React.PropTypes.oneOfType([
+    React.PropTypes.number,
+    React.PropTypes.object,
   ])
 };
 

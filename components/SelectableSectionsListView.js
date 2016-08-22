@@ -1,10 +1,11 @@
 'use strict';
 /* jshint esnext: true */
 
-var React = require('react-native');
-var {Component, ListView, StyleSheet, View, PropTypes} = React;
-var UIManager = require('NativeModules').UIManager;
+import React, { Component } from 'react'
+import {UIManager, ListView, StyleSheet, View, Dimensions} from 'react-native';
+
 var merge = require('merge');
+var window = Dimensions.get('window');
 
 var SectionHeader = require('./SectionHeader');
 var SectionList = require('./SectionList');
@@ -17,8 +18,8 @@ class SelectableSectionsListView extends Component {
 
     this.state = {
       dataSource: new ListView.DataSource({
+        sectionHeaderHasChanged: (row1, row2) => row1 != row2,
         rowHasChanged: (row1, row2) => row1 !== row2,
-        sectionHeaderHasChanged: (prev, next) => prev !== next
       }),
       offsetY: 0
     };
@@ -45,10 +46,13 @@ class SelectableSectionsListView extends Component {
   }
 
   componentDidMount() {
-    // push measuring into the next tick
+    // Default to Whole Window Height
+    this.containerHeight = window.height;
+
+    // Actually measure the view height - https://github.com/facebook/react-native/issues/953
     setTimeout(() => {
-      UIManager.measure(this.refs.view.getNodeHandle(), (x,y,w,h) => {
-        this.containerHeight = h;
+      this.refs.view.measure( (ox, oy, width, height, px, py) => {
+        this.containerHeight = height;
       });
     }, 0);
   }
@@ -108,12 +112,12 @@ class SelectableSectionsListView extends Component {
       var maxY = this.totalHeight - this.containerHeight + headerHeight;
       y = y > maxY ? maxY : y;
 
-      this.refs.listview.refs.listviewscroll.scrollTo(y, 0);
+      this.refs.listview.scrollTo({ y:y, x:0, animated:false });
     } else {
       // this breaks, if not all of the listview is pre-rendered!
       UIManager.measure(this.cellTagMap[section], (x, y, w, h) => {
         y = y - this.props.sectionHeaderHeight;
-        this.refs.listview.refs.listviewscroll.scrollTo(y, 0);
+        this.refs.listview.scrollTo({ y:y, x:0, animated:false });
       });
     }
 
@@ -214,7 +218,7 @@ class SelectableSectionsListView extends Component {
         null;
 
       renderSectionHeader = this.renderSectionHeader;
-      dataSource = this.state.dataSource.cloneWithRowsAndSections(data);
+      dataSource = this.state.dataSource.cloneWithRowsAndSections(data, Object.keys(data));
     }
 
     var renderFooter = this.props.footer ?
@@ -225,23 +229,18 @@ class SelectableSectionsListView extends Component {
       this.renderHeader :
       this.props.renderHeader;
 
-    var props = merge(this.props, {
-      onScroll: this.onScroll,
-      onScrollAnimationEnd: this.onScrollAnimationEnd,
-      dataSource,
-      renderFooter,
-      renderHeader,
-      renderRow: this.renderRow,
-      renderSectionHeader
-    });
-
-    props.style = void 0;
-
     return (
       <View ref="view" style={[styles.container, this.props.style]}>
         <ListView
           ref="listview"
-          {...props}
+          {...this.props}
+          onScroll={this.onScroll}
+          onScrollAnimationEnd={this.onScrollAnimationEnd}
+          dataSource={dataSource}
+          renderFooter={renderFooter}
+          renderHeader={renderHeader}
+          renderRow={this.renderRow}
+          renderSectionHeader={renderSectionHeader}
         />
         {sectionList}
       </View>
@@ -255,111 +254,111 @@ var styles = StyleSheet.create({
   }
 });
 
-var stylesheetProp = PropTypes.oneOfType([
-  PropTypes.number,
-  PropTypes.object,
+var stylesheetProp = React.PropTypes.oneOfType([
+  React.PropTypes.number,
+  React.PropTypes.object,
 ]);
 
 SelectableSectionsListView.propTypes = {
   /**
    * The data to render in the listview
    */
-  data: PropTypes.oneOfType([
-    PropTypes.array,
-    PropTypes.object,
+  data: React.PropTypes.oneOfType([
+    React.PropTypes.array,
+    React.PropTypes.object,
   ]).isRequired,
 
   /**
    * Whether to show the section listing or not
    */
-  hideSectionList: PropTypes.bool,
+  hideSectionList: React.PropTypes.bool,
 
   /**
    * Functions to provide a title for the section header and the section list
    * items. If not provided, the section ids will be used (the keys from the data object)
    */
-  getSectionTitle: PropTypes.func,
-  getSectionListTitle: PropTypes.func,
+  getSectionTitle: React.PropTypes.func,
+  getSectionListTitle: React.PropTypes.func,
 
   /**
    * Callback which should be called when a cell has been selected
    */
-  onCellSelect: PropTypes.func,
+  onCellSelect: React.PropTypes.func,
 
   /**
    * Callback which should be called when the user scrolls to a section
    */
-  onScrollToSection: PropTypes.func,
+  onScrollToSection: React.PropTypes.func,
 
   /**
    * The cell element to render for each row
    */
-  cell: PropTypes.func.isRequired,
+  cell: React.PropTypes.func.isRequired,
 
   /**
    * A custom element to render for each section list item
    */
-  sectionListItem: PropTypes.func,
+  sectionListItem: React.PropTypes.func,
 
   /**
    * A custom element to render for each section header
    */
-  sectionHeader: PropTypes.func,
+  sectionHeader: React.PropTypes.func,
 
   /**
    * A custom element to render as footer
    */
-  footer: PropTypes.func,
+  footer: React.PropTypes.func,
 
   /**
    * A custom element to render as header
    */
-  header: PropTypes.func,
+  header: React.PropTypes.func,
 
   /**
    * The height of the header element to render. Is required if a
    * header element is used, so the positions can be calculated correctly
    */
-  headerHeight: PropTypes.number,
+  headerHeight: React.PropTypes.number,
 
   /**
    * A custom function to render as footer
    */
-  renderHeader: PropTypes.func,
+  renderHeader: React.PropTypes.func,
 
   /**
    * A custom function to render as header
    */
-  renderFooter: PropTypes.func,
+  renderFooter: React.PropTypes.func,
 
   /**
    * An object containing additional props, which will be passed
    * to each cell component
    */
-  cellProps: PropTypes.object,
+  cellProps: React.PropTypes.object,
 
   /**
    * The height of the section header component
    */
-  sectionHeaderHeight: PropTypes.number.isRequired,
+  sectionHeaderHeight: React.PropTypes.number.isRequired,
 
   /**
    * The height of the cell component
    */
-  cellHeight: PropTypes.number.isRequired,
+  cellHeight: React.PropTypes.number.isRequired,
 
   /**
    * Whether to determine the y postion to scroll to by calculating header and
    * cell heights or by using the UIManager to measure the position of the
    * destination element. This is an exterimental feature
    */
-  useDynamicHeights: PropTypes.bool,
+  useDynamicHeights: React.PropTypes.bool,
 
   /**
    * Whether to set the current y offset as state and pass it to each
    * cell during re-rendering
    */
-  updateScrollState: PropTypes.bool,
+  updateScrollState: React.PropTypes.bool,
 
   /**
    * Styles to pass to the container
