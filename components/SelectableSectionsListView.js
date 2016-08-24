@@ -4,7 +4,6 @@
 import React, { Component } from 'react'
 import {UIManager, ListView, StyleSheet, View, Dimensions} from 'react-native';
 
-var merge = require('merge');
 var window = Dimensions.get('window');
 
 var SectionHeader = require('./SectionHeader');
